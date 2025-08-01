@@ -1,7 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use sp_std::vec::Vec;
-
 pub use pallet::*;
 
 pub mod weights;
@@ -119,7 +117,7 @@ pub mod pallet {
         #[pallet::weight(T::WeightInfo::create_proposal())]
         pub fn create_proposal(
             origin: OriginFor<T>,
-            description: Vec<u8>,
+            description: BoundedVec<u8, ConstU32<1024>>,
             amount: BalanceOf<T>,
             recipient: <<T as frame_system::Config>::Lookup as StaticLookup>::Source,
         ) -> DispatchResult {
@@ -127,10 +125,7 @@ pub mod pallet {
             let recipient = T::Lookup::lookup(recipient)?;
 
             ensure!(amount > Zero::zero(), Error::<T>::InvalidProposalAmount);
-            ensure!(
-                description.len() <= T::MaxProposalDescription::get() as usize,
-                Error::<T>::InvalidProposalAmount
-            );
+
 
             let active_proposals = ActiveProposals::<T>::get();
             ensure!(
@@ -157,14 +152,12 @@ pub mod pallet {
             let now = frame_system::Pallet::<T>::block_number();
             let end_block = now + T::VotingPeriod::get();
 
-            let bounded_description: BoundedVec<u8, ConstU32<1024>> = description
-                .try_into()
-                .map_err(|_| Error::<T>::InvalidProposalAmount)?;
+
 
             let proposal = Proposal {
                 id: proposal_id,
                 proposer: proposer.clone(),
-                description: bounded_description,
+                description,
                 amount,
                 recipient,
                 yes_votes: 0,

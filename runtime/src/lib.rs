@@ -16,16 +16,17 @@ use sp_runtime::{
 	MultiAddress, MultiSignature,
 };
 use frame_support::{
-	traits::{ConstU32, ConstU128, ConstLockId},
+	traits::{ConstU32, ConstU128, LockIdentifier},
 	parameter_types,
 };
 
-// Define ConstAccountId for configuration
-pub struct ConstAccountId<const A: [u8; 32]>;
-impl<const A: [u8; 32]> frame_support::traits::Get<AccountId> for ConstAccountId<A> {
-	fn get() -> AccountId {
-		A.into()
-	}
+// Define account IDs and lock identifiers using parameter_types
+parameter_types! {
+	pub const FounderAccount: AccountId = AccountId::new([0u8; 32]);
+	pub const DaoTreasuryAccount: AccountId = AccountId::new([1u8; 32]);
+	pub const StakingLockId: LockIdentifier = [1u8; 8];
+	pub const CreateTokenGovernanceLockId: LockIdentifier = [2u8; 8];
+	pub const DaoGovernanceLockId: LockIdentifier = [3u8; 8];
 }
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -273,8 +274,8 @@ impl pallet_fee_engine::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
 	type WeightInfo = pallet_fee_engine::weights::SubstrateWeight<Runtime>;
-	type FounderAccount = ConstAccountId<{ [0u8; 32] }>; // TODO: Set actual founder account
-	type DaoTreasuryAccount = ConstAccountId<{ [1u8; 32] }>; // TODO: Set actual DAO treasury account
+	type FounderAccount = FounderAccount;
+	type DaoTreasuryAccount = DaoTreasuryAccount;
 }
 
 impl pallet_create_token::Config for Runtime {
@@ -283,8 +284,8 @@ impl pallet_create_token::Config for Runtime {
 	type WeightInfo = pallet_create_token::weights::SubstrateWeight<Runtime>;
 	type MaxWalletPercentage = ConstU32<5>; // 5% max per wallet
 	type MinGovernanceStake = ConstU128<1_000_000_000_000_000_000_000>; // 1 CREATE
-	type StakingLockId = ConstLockId<1>;
-	type GovernanceLockId = ConstLockId<2>;
+	type StakingLockId = StakingLockId;
+	type GovernanceLockId = CreateTokenGovernanceLockId;
 }
 
 impl pallet_dex::Config for Runtime {
@@ -307,6 +308,6 @@ impl pallet_dao::Config for Runtime {
 	type ExecutionDelay = ConstU32<10>; // 10 blocks
 	type MinVotes = ConstU32<1>;
 	type MaxActiveProposals = ConstU32<10>;
-	type TreasuryAccount = ConstAccountId<{ [1u8; 32] }>; // DAO treasury account
-	type GovernanceLockId = ConstLockId<3>;
+	type TreasuryAccount = DaoTreasuryAccount;
+	type GovernanceLockId = DaoGovernanceLockId;
 }

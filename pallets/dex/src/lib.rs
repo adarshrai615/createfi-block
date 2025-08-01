@@ -1,13 +1,9 @@
 //! # DEX Pallet
 //!
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! This pallet implements the decentralized exchange (DEX) for the CREATEFI blockchain.
 //! It provides AMM (Automated Market Maker) pools, order book trading, and liquidity provision.
-
-use sp_std::vec::Vec;
-use sp_std::string::String;
-use sp_std::format;
-
-#![cfg_attr(not(feature = "std"), no_std)]
 
 pub use pallet::*;
 
@@ -31,6 +27,7 @@ pub mod pallet {
     };
     use frame_system::pallet_prelude::*;
     use sp_runtime::traits::{CheckedAdd, CheckedSub, CheckedMul, CheckedDiv, Zero, IntegerSquareRoot};
+    use sp_std::vec::Vec;
 
     /// The pallet's configuration trait.
     #[pallet::config]
@@ -192,8 +189,8 @@ pub mod pallet {
         AmmTrade {
             pool_id: PoolId,
             trader: T::AccountId,
-            token_in: Vec<u8>,
-            token_out: Vec<u8>,
+            token_in: BoundedVec<u8, ConstU32<32>>,
+            token_out: BoundedVec<u8, ConstU32<32>>,
             amount_in: BalanceOf<T>,
             amount_out: BalanceOf<T>,
             fee: BalanceOf<T>,
@@ -267,8 +264,8 @@ pub mod pallet {
         #[pallet::weight(T::WeightInfo::create_pool())]
         pub fn create_pool(
             origin: OriginFor<T>,
-            token_a: Vec<u8>,
-            token_b: Vec<u8>,
+            token_a: BoundedVec<u8, ConstU32<32>>,
+            token_b: BoundedVec<u8, ConstU32<32>>,
             initial_liquidity_a: BalanceOf<T>,
             initial_liquidity_b: BalanceOf<T>,
         ) -> DispatchResult {
@@ -278,8 +275,12 @@ pub mod pallet {
             ensure!(initial_liquidity_a >= T::MinLiquidity::get(), Error::<T>::AmountBelowMinimum);
             ensure!(initial_liquidity_b >= T::MinLiquidity::get(), Error::<T>::AmountBelowMinimum);
 
-            let token_pair_str = format!("{}-{}", String::from_utf8_lossy(&token_a), String::from_utf8_lossy(&token_b));
-            let token_pair: TokenPair = token_pair_str.as_bytes().to_vec().try_into().map_err(|_| Error::<T>::InvalidTokenPair)?;
+            // Create token pair by concatenating token_a, "-", and token_b
+            let mut token_pair_vec = Vec::new();
+            token_pair_vec.extend_from_slice(&token_a);
+            token_pair_vec.extend_from_slice(b"-");
+            token_pair_vec.extend_from_slice(&token_b);
+            let token_pair: TokenPair = token_pair_vec.try_into().map_err(|_| Error::<T>::InvalidTokenPair)?;
             
             // Check if pool already exists
             ensure!(PoolIds::<T>::get(&token_pair).is_none(), Error::<T>::PoolAlreadyExists);
@@ -389,7 +390,7 @@ pub mod pallet {
         pub fn amm_trade(
             origin: OriginFor<T>,
             pool_id: PoolId,
-            token_in: Vec<u8>,
+            token_in: BoundedVec<u8, ConstU32<32>>,
             amount_in: BalanceOf<T>,
             min_amount_out: BalanceOf<T>,
         ) -> DispatchResult {
@@ -398,20 +399,28 @@ pub mod pallet {
             let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
 
             // Determine which token is being traded
-            // For simplicity, assume token_a is the first part of the token_pair string
-            let token_pair_str = String::from_utf8_lossy(&pool.token_pair);
-            let parts: Vec<&str> = token_pair_str.split('-').collect();
-            if parts.len() != 2 {
-                return Err(Error::<T>::InvalidTokenPair.into());
+            // For simplicity, assume token_a is the first part of the token_pair
+            // Find the position of the "-" separator
+            let mut dash_pos = None;
+            for (i, &byte) in pool.token_pair.iter().enumerate() {
+                if byte == b'-' {
+                    dash_pos = Some(i);
+                    break;
+                }
             }
             
-            let token_a = parts[0].as_bytes().to_vec();
-            let token_b = parts[1].as_bytes().to_vec();
+            let dash_pos = dash_pos.ok_or(Error::<T>::InvalidTokenPair)?;
+            
+            // Split the token pair into token_a and token_b
+            let token_a = pool.token_pair[..dash_pos].to_vec();
+            let token_b = pool.token_pair[(dash_pos + 1)..].to_vec();
             
             let (reserve_in, reserve_out, token_out) = if token_in == token_a {
-                (pool.reserve_a, pool.reserve_b, token_b)
+                let token_out_bounded: BoundedVec<u8, ConstU32<32>> = token_b.try_into().map_err(|_| Error::<T>::InvalidTokenPair)?;
+                (pool.reserve_a, pool.reserve_b, token_out_bounded)
             } else if token_in == token_b {
-                (pool.reserve_b, pool.reserve_a, token_a.clone())
+                let token_out_bounded: BoundedVec<u8, ConstU32<32>> = token_a.clone().try_into().map_err(|_| Error::<T>::InvalidTokenPair)?;
+                (pool.reserve_b, pool.reserve_a, token_out_bounded)
             } else {
                 return Err(Error::<T>::InvalidTokenPair.into());
             };

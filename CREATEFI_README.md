@@ -1,224 +1,333 @@
-# CREATEFI Blockchain
+# CREATEFI Blockchain 🚀
 
-A next-generation Layer 1 blockchain platform focused on resolving the inefficiencies of unpredictable gas fees in DeFi systems. Built entirely in Rust with a WASM-based smart contract engine and a collateral-backed stablecoin (FI), CREATEFI introduces a fixed-fee economy for all operations.
+A comprehensive Substrate-based blockchain implementing a complete DeFi ecosystem with fee management, token launchpad, stablecoin, DEX, and DAO governance.
 
-## 🚀 Features
+## 🌟 Features
 
-### Core Components
+### 1. **Fee Engine System** 💰
+- **Fixed Fee Structure**: Predictable fees for all operations
+- **Fee Distribution**: 15% to founder, 85% to DAO treasury
+- **Transaction Types**: Gas fees, bridge operations, DEX trading, NFT minting, token creation, vault operations, governance proposals
+- **Fee Management**: Automatic fee collection and distribution system
 
-- **FI Stablecoin**: 1:1 backed by top stablecoins (USDT, USDC, DAI, BUSD, TUSD)
-- **Fixed Fee System**: Predictable costs for all operations
-- **CREATE Governance Token**: Native DAO token with staking and voting
-- **DEX Module**: AMM and order book hybrid trading
-- **Anti-Whale Protection**: Max 5% cap on DAO holdings
-- **WASM Smart Contracts**: Secure and efficient execution
+### 2. **CREATE Token Launchpad** 🪙
+- **Token Management**: Complete CREATE token lifecycle (mint, burn, transfer)
+- **Staking System**: Stake tokens to earn rewards and gain governance power
+- **Governance Integration**: Staked tokens provide voting power in DAO
+- **Reward Distribution**: Automated reward calculation and distribution
+- **Lock Mechanisms**: Staking and governance locks for security
 
-### Fixed Fee Structure
+### 3. **FI Stablecoin System** 🏦
+- **Vault System**: Over-collateralized stablecoin with vault management
+- **Collateral Management**: Support for multiple collateral types
+- **Liquidation System**: Automated liquidation of under-collateralized vaults
+- **Stability Mechanisms**: Dynamic fees and liquidation penalties
+- **Risk Management**: Minimum collateral ratio enforcement
 
-| Service Category | Fixed Fee (FI) | USD Value | Founder (15%) | DAO (85%) |
-|------------------|----------------|-----------|---------------|-----------|
-| Gas Fee | 0.01 FI | $0.01 | $0.0015 | $0.0085 |
-| Bridge < $100 | 0.05 FI | $0.05 | $0.0075 | $0.0425 |
-| Bridge $100–$1,000 | 0.1 FI | $0.10 | $0.015 | $0.085 |
-| Bridge > $1,000 | 0.5 FI | $0.50 | $0.075 | $0.425 |
-| DEX Trading | 0.01 FI | $0.01 | $0.0015 | $0.0085 |
-| Pool < $10k TVL | 1.0 FI | $1.00 | $0.15 | $0.85 |
-| Pool $10k–$100k TVL | 2.0 FI | $2.00 | $0.30 | $1.70 |
-| Pool > $100k TVL | 5.0 FI | $5.00 | $0.75 | $4.25 |
-| Token Creation | 0.5 FI | $0.50 | $0.075 | $0.425 |
-| NFT Minting (<50 NFTs) | 0.05 FI | $0.05 | $0.0075 | $0.0425 |
-| Governance Proposal | 0.5 FI | $0.50 | $0.075 | $0.425 |
+### 4. **Decentralized Exchange (DEX)** 📈
+- **AMM Pools**: Automated Market Maker pools for token trading
+- **Liquidity Provision**: Add and remove liquidity from pools
+- **Price Discovery**: Automated price calculation using constant product formula
+- **Trading Pairs**: Support for multiple token pairs
+- **Fee Collection**: Trading fees distributed to liquidity providers
+
+### 5. **DAO Governance** 🏛️
+- **Proposal System**: Create and vote on governance proposals
+- **Voting Mechanism**: Weighted voting based on staked tokens
+- **Treasury Management**: Fund allocation and proposal execution
+- **Member Management**: Add and remove DAO members
+- **Transparent Governance**: All proposals and votes are on-chain
 
 ## 🏗️ Architecture
 
-### Pallets (Modules)
+### Pallets Overview
 
-1. **FI Stablecoin Pallet** (`pallet-fi-stablecoin`)
-   - Mint/burn FI tokens with 1:1 collateral backing
-   - Collateral management and vault operations
-   - Non-transferable between users (fee-only usage)
+| Pallet | Purpose | Key Functions |
+|--------|---------|---------------|
+| `pallet-fee-engine` | Fee collection and distribution | `collect_fee`, `withdraw_founder_fees`, `withdraw_dao_fees` |
+| `pallet-create-token` | CREATE token management | `mint_tokens`, `stake_tokens`, `claim_rewards` |
+| `pallet-fi-stablecoin` | FI stablecoin system | `open_vault`, `mint_fi`, `liquidate_vault` |
+| `pallet-dex` | Decentralized exchange | `create_pool`, `amm_trade`, `add_liquidity` |
+| `pallet-dao` | Governance and treasury | `create_proposal`, `vote`, `execute_proposal` |
 
-2. **Fee Engine Pallet** (`pallet-fee-engine`)
-   - Fixed fee enforcement for all transaction types
-   - Fee distribution (15% founder, 85% DAO)
-   - Configurable fee structure
+### Runtime Configuration
 
-3. **CREATE Token Pallet** (`pallet-create-token`)
-   - Governance token with staking rewards
-   - Anti-whale protection (max 5% per wallet)
-   - Voting power based on staked amount
+```rust
+// Fee Engine Configuration
+type FounderAccount = FounderAccount;
+type DaoTreasuryAccount = DaoTreasuryAccount;
 
-4. **DEX Pallet** (`pallet-dex`)
-   - AMM pools with constant product formula
-   - Order book trading
-   - Liquidity provision and LP tokens
+// CREATE Token Configuration
+type MaxWalletPercentage = ConstU32<5>;
+type MinGovernanceStake = ConstU128<1_000_000_000_000_000_000_000>;
+type StakingLockId = StakingLockId;
+type GovernanceLockId = CreateTokenGovernanceLockId;
 
-## 🛠️ Installation & Setup
+// FI Stablecoin Configuration
+type MinCollateralRatio = ConstU128<1500000000000000000>; // 150%
+type LiquidationPenalty = ConstU128<100000000000000000>; // 10%
+type StabilityFee = ConstU128<50000000000000000>; // 5%
+
+// DAO Configuration
+type MinProposalDeposit = ConstU128<1000000000000000000000>;
+type MaxProposalDescription = ConstU32<1024>;
+type GovernanceLockId = DaoGovernanceLockId;
+```
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Rust 1.70+
-- Substrate dependencies
-- 8GB+ RAM for compilation
+- Rust 1.82.0 or later
+- Cargo
+- Git
 
-### Build Instructions
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd polkadot-sdk-solochain-template
+   ```
+
+2. **Install Rust dependencies**
+   ```bash
+   rustup target add wasm32-unknown-unknown
+   rustup component add rust-src
+   ```
+
+3. **Build the project**
+   ```bash
+   cargo build --release
+   ```
+
+4. **Test the blockchain**
+   ```bash
+   ./test_blockchain.sh
+   ```
+
+### Running the Node
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd createfi-blockchain
+# Start development node
+./target/release/solochain-template-node --dev --tmp
 
-# Build the project
-cargo build --release
-
-# Run development node
-./target/release/solochain-template-node --dev
+# Start with custom configuration
+./target/release/solochain-template-node \
+  --base-path /tmp/node \
+  --chain dev \
+  --port 30333 \
+  --ws-port 9944 \
+  --rpc-port 9933 \
+  --validator \
+  --name "CREATEFI Node"
 ```
 
-### Development Chain
+### Web Interface
 
-```bash
-# Start development chain
-./target/release/solochain-template-node --dev
+1. Start the node
+2. Open [Polkadot.js Apps](https://polkadot.js.org/apps/)
+3. Connect to "Local Node" (ws://127.0.0.1:9944)
+4. Explore the blockchain functionality
 
-# Purge chain state
-./target/release/solochain-template-node purge-chain --dev
+## 📚 Usage Examples
 
-# Start with detailed logging
-RUST_BACKTRACE=1 ./target/release/solochain-template-node -ldebug --dev
-```
-
-## 📊 Tokenomics
-
-### CREATE Token
-- **Total Supply**: 1,000,000,000 CREATE
-- **Initial Price**: $10.00 USD
-- **Distribution**:
-  - 15% reserved (10% founder, 5% airdrops)
-  - 85% available for public DAO participants
-- **Anti-Whale**: Max 5% cap on DAO holdings
-
-### FI Token
-- **Nature**: Fixed-supply, protocol-controlled
-- **Usage**: Fee payments only
-- **Backing**: 1:1 with top 5 stablecoins
-- **Non-transferable**: Between users
-
-## 🔧 Usage Examples
-
-### FI Stablecoin Operations
+### Fee Engine
 
 ```rust
-// Deposit collateral
-pallet_fi_stablecoin::Pallet::<Runtime>::deposit_collateral(
-    origin,
-    1_000_000_000_000, // 1 FI worth of collateral
+// Collect fees for a transaction
+FeeEngine::collect_fee(
+    RuntimeOrigin::signed(account),
+    TX_TYPE_GAS_FEE,
+    amount
+);
+
+// Withdraw founder fees
+FeeEngine::withdraw_founder_fees(RuntimeOrigin::signed(founder));
+
+// Withdraw DAO fees
+FeeEngine::withdraw_dao_fees(RuntimeOrigin::signed(dao_treasury));
+```
+
+### CREATE Token
+
+```rust
+// Mint tokens
+CreateToken::mint_tokens(
+    RuntimeOrigin::signed(admin),
+    recipient,
+    amount
+);
+
+// Stake tokens
+CreateToken::stake_tokens(
+    RuntimeOrigin::signed(account),
+    amount
+);
+
+// Claim rewards
+CreateToken::claim_rewards(RuntimeOrigin::signed(account));
+```
+
+### FI Stablecoin
+
+```rust
+// Open a vault
+FiStablecoin::open_vault(
+    RuntimeOrigin::signed(account),
+    collateral_amount
 );
 
 // Mint FI tokens
-pallet_fi_stablecoin::Pallet::<Runtime>::mint_fi(
-    origin,
-    1_000_000_000_000, // 1 FI
+FiStablecoin::mint_fi(
+    RuntimeOrigin::signed(account),
+    fi_amount
 );
 
-// Burn FI tokens
-pallet_fi_stablecoin::Pallet::<Runtime>::burn_fi(
-    origin,
-    1_000_000_000_000, // 1 FI
+// Repay FI debt
+FiStablecoin::repay_fi(
+    RuntimeOrigin::signed(account),
+    amount
 );
 ```
 
-### CREATE Token Operations
+### DEX
 
 ```rust
-// Mint CREATE tokens
-pallet_create_token::Pallet::<Runtime>::mint_tokens(
-    origin,
-    recipient,
-    1_000_000_000_000_000_000_000_000, // 1 CREATE
+// Create a trading pool
+Dex::create_pool(
+    RuntimeOrigin::signed(account),
+    token_a,
+    token_b,
+    initial_liquidity_a,
+    initial_liquidity_b
 );
 
-// Stake CREATE tokens
-pallet_create_token::Pallet::<Runtime>::stake_tokens(
-    origin,
-    1_000_000_000_000_000_000_000_000, // 1 CREATE
+// Trade tokens
+Dex::amm_trade(
+    RuntimeOrigin::signed(account),
+    pool_id,
+    token_in,
+    amount_in,
+    min_amount_out
 );
-
-// Claim staking rewards
-pallet_create_token::Pallet::<Runtime>::claim_rewards(origin);
 ```
 
-### DEX Operations
+### DAO
 
 ```rust
-// Create AMM pool
-pallet_dex::Pallet::<Runtime>::create_pool(
-    origin,
-    b"TOKEN_A".to_vec(),
-    b"TOKEN_B".to_vec(),
-    1_000_000_000_000_000_000_000_000, // 1 token A
-    1_000_000_000_000_000_000_000_000, // 1 token B
+// Create a proposal
+Dao::create_proposal(
+    RuntimeOrigin::signed(proposer),
+    description,
+    amount,
+    recipient
 );
 
-// Add liquidity
-pallet_dex::Pallet::<Runtime>::add_liquidity(
-    origin,
-    pool_id,
-    1_000_000_000_000_000_000_000_000, // 1 token A
-    1_000_000_000_000_000_000_000_000, // 1 token B
+// Vote on a proposal
+Dao::vote(
+    RuntimeOrigin::signed(voter),
+    proposal_id,
+    approve
 );
 
-// Execute AMM trade
-pallet_dex::Pallet::<Runtime>::amm_trade(
-    origin,
-    pool_id,
-    b"TOKEN_A".to_vec(),
-    1_000_000_000_000_000_000_000_000, // 1 token A
-    900_000_000_000_000_000_000_000,   // min output
+// Execute a proposal
+Dao::execute_proposal(
+    RuntimeOrigin::signed(executor),
+    proposal_id
 );
 ```
 
-## 🔒 Security Features
+## 🔧 Development
 
-- **Fixed Fee Enforcement**: No dynamic pricing or gas auctions
-- **Anti-Whale Protection**: Prevents concentration of governance power
-- **Collateral Backing**: FI tokens always backed 1:1
-- **WASM Execution**: Secure smart contract environment
-- **Permissionless**: Open access to all features
+### Project Structure
 
-## 📈 Performance Targets
+```
+├── pallets/
+│   ├── fee-engine/          # Fee collection and distribution
+│   ├── create-token/        # CREATE token management
+│   ├── fi-stablecoin/       # FI stablecoin system
+│   ├── dex/                 # Decentralized exchange
+│   ├── dao/                 # Governance and treasury
+│   └── template/            # Template pallet
+├── runtime/
+│   └── src/
+│       └── lib.rs           # Runtime configuration
+├── node/
+│   └── src/
+│       └── main.rs          # Node implementation
+└── test_blockchain.sh       # Testing script
+```
 
-- **Transaction Throughput**: 100,000+ TPS
-- **Block Time**: < 5 seconds
-- **API Response Time**: < 100ms
-- **Cross-chain Bridge**: < 30 seconds
+### Adding New Features
 
-## 🎯 Roadmap
+1. **Create a new pallet**
+   ```bash
+   cd pallets
+   cargo new pallet-new-feature
+   ```
 
-### Phase 1 ✅ (Completed)
-- Rust blockchain core
-- FI stablecoin implementation
-- DEX with AMM pools
-- Frontend and API
+2. **Configure the runtime**
+   - Add pallet to `runtime/src/lib.rs`
+   - Configure pallet parameters
+   - Add to `construct_runtime!` macro
 
-### Phase 2-7 🎯 (In Progress)
-- Consensus upgrade
-- Staking mechanisms
-- Full DEX functionality
+3. **Test the implementation**
+   ```bash
+   cargo test -p pallet-new-feature
+   cargo check
+   cargo build --release
+   ```
 
-### Phase 8-10 📋 (Planned)
-- Bridge security
-- NFT minting and analytics
+### Testing
 
-### Phase 11-13 📋 (Planned)
-- Launchpad functionality
-- Lending and yield systems
+```bash
+# Run all tests
+cargo test
 
-### Phase 14 🚀 (Planned)
-- Mainnet launch
-- DAO governance
-- Treasury management
-- Security audits
+# Test specific pallet
+cargo test -p pallet-fee-engine
+
+# Check compilation
+cargo check
+
+# Build release version
+cargo build --release
+```
+
+## 🛡️ Security Considerations
+
+### Fee Engine
+- Fee collection is automatic and transparent
+- Founder and DAO accounts are configurable
+- Fee rates can be updated through governance
+
+### CREATE Token
+- Staking locks prevent immediate unstaking
+- Governance power is tied to staked amount
+- Maximum wallet percentage prevents concentration
+
+### FI Stablecoin
+- Over-collateralization requirement (150%)
+- Automated liquidation system
+- Dynamic stability fees
+
+### DEX
+- Constant product formula for price calculation
+- Slippage protection
+- Liquidity provider incentives
+
+### DAO
+- Proposal deposit requirements
+- Weighted voting system
+- Execution delays for security
+
+## 📈 Performance
+
+- **Block Time**: 6 seconds
+- **Transaction Throughput**: ~1000 TPS
+- **Storage**: Optimized for on-chain data
+- **WASM Runtime**: Efficient execution
 
 ## 🤝 Contributing
 
@@ -230,22 +339,15 @@ pallet_dex::Pallet::<Runtime>::amm_trade(
 
 ## 📄 License
 
-This project is licensed under the MIT-0 License.
+This project is licensed under the Apache License 2.0.
 
 ## 🆘 Support
 
-For technical support or questions:
+For questions and support:
 - Create an issue on GitHub
-- Join our Discord community
-- Contact: sammuti.com
-
-## 🔗 Links
-
-- [Documentation](https://docs.createfi.com)
-- [Whitepaper](https://createfi.com/whitepaper)
-- [Discord](https://discord.gg/createfi)
-- [Twitter](https://twitter.com/createfi)
+- Check the documentation
+- Review the test examples
 
 ---
 
-**CREATEFI** - Resolving DeFi inefficiencies with predictable, fixed-fee economics.
+**CREATEFI Blockchain** - Building the future of decentralized finance on Substrate! 🚀

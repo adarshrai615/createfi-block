@@ -1,0 +1,62 @@
+{
+  "name": "createfi-blockbuild-frontend",
+  "version": "1.0.0",
+  "description": "CREATEFI Blockchain Frontend - Professional DeFi Interface",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.0.2",
+    "wouter": "^2.12.1",
+    "lightweight-charts": "^4.1.3",
+    "@polkadot/api": "^10.11.2",
+    "@polkadot/extension-dapp": "^0.45.1",
+    "@polkadot/wasm-crypto": "^6.5.1",
+    "@polkadot/util": "^12.3.2",
+    "@polkadot/util-crypto": "^12.3.2",
+    "react-query": "^3.39.3",
+    "zustand": "^4.4.1",
+    "tailwindcss": "^3.3.0",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.27",
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "react-hot-toast": "^2.4.1",
+    "react-hook-form": "^7.47.0",
+    "@hookform/resolvers": "^3.3.2",
+    "zod": "^3.22.4",
+    "big.js": "^6.2.1",
+    "decimal.js": "^10.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.3",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "vite": "^4.4.5"
+  },
+  "keywords": [
+    "defi",
+    "blockchain",
+    "substrate",
+    "polkadot",
+    "trading",
+    "dex",
+    "createfi"
+  ],
+  "author": "CREATEFI Team",
+  "license": "MIT"
+}

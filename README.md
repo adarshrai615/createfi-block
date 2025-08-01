@@ -6,6 +6,7 @@
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/)
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0.2-blue.svg)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
 ## 🌟 Overview
 
@@ -36,16 +37,20 @@ CREATEFI Ecosystem
 - **Node.js**: `v18+` and `npm`
 - **Polkadot.js Apps**: For blockchain interaction
 
-### 1. Blockchain Setup
+### 1. Clone and Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/adarshrai615/polkadot-sdk-solochain-template.git
-cd polkadot-sdk-solochain-template
+git clone https://github.com/your-username/createfi-blockchain.git
+cd createfi-blockchain
 
 # Install Rust dependencies
 rustup target add wasm32-unknown-unknown
+```
 
+### 2. Blockchain Setup
+
+```bash
 # Build the blockchain
 cargo build --release
 
@@ -53,7 +58,7 @@ cargo build --release
 ./target/release/solochain-template-node --dev --tmp
 ```
 
-### 2. Frontend Setup
+### 3. Frontend Setup
 
 ```bash
 # Navigate to frontend directory
@@ -69,7 +74,7 @@ npm run dev
 npm run build
 ```
 
-### 3. Access the Interface
+### 4. Access the Interface
 
 - **Blockchain**: http://localhost:9944 (Polkadot.js Apps)
 - **Frontend**: http://localhost:3000 (CREATEFI Interface)
@@ -162,6 +167,7 @@ npm run build
 ### Project Structure
 
 ```
+createfi-blockchain/
 ├── pallets/                    # Substrate pallets
 │   ├── fee-engine/            # Fixed fee system
 │   ├── create-token/          # CREATE governance token
@@ -176,7 +182,11 @@ npm run build
 │   │   ├── pages/            # Application pages
 │   │   └── App.tsx           # Main application
 │   └── package.json          # Frontend dependencies
-└── docs/                     # Documentation
+├── .github/                   # CI/CD workflows
+├── README.md                  # This file
+├── CREATEFI_README.md         # Detailed documentation
+├── PHASE1_COMPLETE.md         # Implementation summary
+└── test_blockchain.sh         # Testing script
 ```
 
 ### Building
@@ -266,8 +276,8 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ## 🆘 Support
 
 - **Documentation**: [CREATEFI_README.md](CREATEFI_README.md)
-- **Issues**: [GitHub Issues](https://github.com/adarshrai615/polkadot-sdk-solochain-template/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/adarshrai615/polkadot-sdk-solochain-template/discussions)
+- **Issues**: [GitHub Issues](https://github.com/your-username/createfi-blockchain/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/createfi-blockchain/discussions)
 
 ## 🏆 Acknowledgments
 

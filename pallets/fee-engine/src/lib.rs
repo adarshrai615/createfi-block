@@ -8,7 +8,12 @@
 
 pub use pallet::*;
 
-
+/// Trait for other pallets to interact with the fee engine.
+pub trait FeeEngineInterface<AccountId, Balance> {
+    fn collect_fee(payer: &AccountId, transaction_type: u8, fee_amount: Balance) -> Result<(), &'static str>;
+    fn get_fee(transaction_type: &u8) -> Balance;
+    fn check_fee(transaction_type: &u8, fee_paid: Balance) -> bool;
+}
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -20,7 +25,7 @@ pub mod pallet {
     use super::*;
     use frame_support::{
         pallet_prelude::*,
-        traits::Currency,
+        traits::{Currency, Hooks},
     };
     use frame_system::pallet_prelude::*;
     use sp_runtime::traits::{CheckedAdd, CheckedSub, Zero};
@@ -73,9 +78,16 @@ pub mod pallet {
     #[pallet::pallet]
     pub struct Pallet<T>(_);
 
+    #[pallet::hooks]
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+        fn on_genesis() {
+            Self::initialize_fees();
+        }
+    }
+
     /// Fixed fees for each transaction type (in FI tokens).
     #[pallet::storage]
-    #[pallet::getter(fn get_fee)]
+    #[pallet::getter(fn fixed_fees)]
     pub type FixedFees<T> = StorageMap<_, Blake2_128Concat, TransactionType, BalanceOf<T>, ValueQuery>;
 
     /// Total fees collected by the protocol.
@@ -224,7 +236,9 @@ pub mod pallet {
 
     impl<T: Config> Pallet<T> {
         /// Get the fixed fee for a transaction type.
-
+        pub fn get_fee(transaction_type: &TransactionType) -> BalanceOf<T> {
+            FixedFees::<T>::get(transaction_type)
+        }
 
         /// Check if the provided fee is sufficient for the transaction type.
         pub fn check_fee(transaction_type: &TransactionType, fee_paid: BalanceOf<T>) -> bool {
@@ -280,33 +294,52 @@ pub mod pallet {
         /// Initialize the default fee structure.
         /// This should be called during genesis.
         pub fn initialize_fees() {
-            // TODO: Fix type conversion issues
+            use sp_runtime::traits::UniqueSaturatedInto;
+            
+            // Convert FI token amounts to BalanceOf<T> (assuming 12 decimal places)
+            let fi_unit: u128 = 1_000_000_000_000; // 1 FI = 10^12 smallest units
+            
             // Gas Fee: 0.01 FI
-            // FixedFees::<T>::insert(TX_TYPE_GAS_FEE, 10_000_000_000u128);
+            FixedFees::<T>::insert(TX_TYPE_GAS_FEE, (fi_unit / 100).unique_saturated_into());
             
             // Bridge fees
-            // FixedFees::<T>::insert(TX_TYPE_BRIDGE_SMALL, 50_000_000_000u128);      // 0.05 FI
-            // FixedFees::<T>::insert(TX_TYPE_BRIDGE_MEDIUM, 100_000_000_000u128);   // 0.1 FI
-            // FixedFees::<T>::insert(TX_TYPE_BRIDGE_LARGE, 500_000_000_000u128);    // 0.5 FI
-            // FixedFees::<T>::insert(TX_TYPE_NFT_BRIDGE, 50_000_000_000u128);       // 0.05 FI
+            FixedFees::<T>::insert(TX_TYPE_BRIDGE_SMALL, (fi_unit / 20).unique_saturated_into());      // 0.05 FI
+            FixedFees::<T>::insert(TX_TYPE_BRIDGE_MEDIUM, (fi_unit / 10).unique_saturated_into());     // 0.1 FI
+            FixedFees::<T>::insert(TX_TYPE_BRIDGE_LARGE, (fi_unit / 2).unique_saturated_into());       // 0.5 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_BRIDGE, (fi_unit / 20).unique_saturated_into());        // 0.05 FI
             
             // DEX fees
-            // FixedFees::<T>::insert(TX_TYPE_DEX_TRADING, 10_000_000_000u128);      // 0.01 FI
-            // FixedFees::<T>::insert(TX_TYPE_POOL_SMALL, 1_000_000_000_000u128);    // 1.0 FI
-            // FixedFees::<T>::insert(TX_TYPE_POOL_MEDIUM, 2_000_000_000_000u128);   // 2.0 FI
-            // FixedFees::<T>::insert(TX_TYPE_POOL_LARGE, 5_000_000_000_000u128);    // 5.0 FI
-            // FixedFees::<T>::insert(TX_TYPE_POOL_OPERATIONS, 10_000_000_000u128);  // 0.01 FI
+            FixedFees::<T>::insert(TX_TYPE_DEX_TRADING, (fi_unit / 100).unique_saturated_into());      // 0.01 FI
+            FixedFees::<T>::insert(TX_TYPE_POOL_SMALL, fi_unit.unique_saturated_into());               // 1.0 FI
+            FixedFees::<T>::insert(TX_TYPE_POOL_MEDIUM, (fi_unit * 2).unique_saturated_into());        // 2.0 FI
+            FixedFees::<T>::insert(TX_TYPE_POOL_LARGE, (fi_unit * 5).unique_saturated_into());         // 5.0 FI
+            FixedFees::<T>::insert(TX_TYPE_POOL_OPERATIONS, (fi_unit / 100).unique_saturated_into());  // 0.01 FI
             
             // Token and NFT fees
-            // FixedFees::<T>::insert(TX_TYPE_TOKEN_CREATION, 500_000_000_000u128);  // 0.5 FI
-            // FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_SMALL, 50_000_000_000u128);  // 0.05 FI
-            // FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_MEDIUM, 200_000_000_000u128); // 0.2 FI
-            // FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_LARGE, 1_000_000_000_000u128); // 1.0 FI
-            // FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_XLARGE, 2_000_000_000_000u128); // 2.0 FI
+            FixedFees::<T>::insert(TX_TYPE_TOKEN_CREATION, (fi_unit / 2).unique_saturated_into());     // 0.5 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_SMALL, (fi_unit / 20).unique_saturated_into()); // 0.05 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_MEDIUM, (fi_unit / 5).unique_saturated_into()); // 0.2 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_LARGE, fi_unit.unique_saturated_into());        // 1.0 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_XLARGE, (fi_unit * 2).unique_saturated_into()); // 2.0 FI
             
             // Other fees
-            // FixedFees::<T>::insert(TX_TYPE_VAULT_CREATION, 50_000_000_000u128);   // 0.05 FI
-            // FixedFees::<T>::insert(TX_TYPE_GOVERNANCE_PROPOSAL, 500_000_000_000u128); // 0.5 FI
+            FixedFees::<T>::insert(TX_TYPE_VAULT_CREATION, (fi_unit / 20).unique_saturated_into());    // 0.05 FI
+            FixedFees::<T>::insert(TX_TYPE_GOVERNANCE_PROPOSAL, (fi_unit / 2).unique_saturated_into()); // 0.5 FI
+        }
+    }
+
+    impl<T: Config> FeeEngineInterface<T::AccountId, BalanceOf<T>> for Pallet<T> {
+        fn collect_fee(payer: &T::AccountId, transaction_type: u8, fee_amount: BalanceOf<T>) -> Result<(), &'static str> {
+            Self::collect_fee(payer, transaction_type, fee_amount).map_err(|_| "Fee collection failed")
+        }
+
+        fn get_fee(transaction_type: &u8) -> BalanceOf<T> {
+            FixedFees::<T>::get(transaction_type)
+        }
+
+        fn check_fee(transaction_type: &u8, fee_paid: BalanceOf<T>) -> bool {
+            let required_fee = FixedFees::<T>::get(transaction_type);
+            fee_paid >= required_fee
         }
     }
 }

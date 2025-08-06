@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'wouter'
 import { 
   CurrencyDollarIcon,
@@ -29,7 +29,7 @@ interface RecentActivity {
 }
 
 export default function Dashboard() {
-  const [quickStats, setQuickStats] = useState<QuickStat[]>([
+  const [quickStats] = useState<QuickStat[]>([
     {
       name: 'Total Value Locked',
       value: '$19.5M',
@@ -60,7 +60,7 @@ export default function Dashboard() {
     }
   ])
 
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([
+  const [recentActivity] = useState<RecentActivity[]>([
     {
       id: '1',
       type: 'Trade',

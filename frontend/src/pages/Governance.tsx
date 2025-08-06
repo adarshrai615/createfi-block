@@ -23,7 +23,7 @@ interface Proposal {
 }
 
 export default function Governance() {
-  const [proposals, setProposals] = useState<Proposal[]>([
+  const [proposals] = useState<Proposal[]>([
     {
       id: 42,
       title: 'Increase CREATE Token Staking Rewards',

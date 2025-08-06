@@ -49,6 +49,8 @@ pub mod pallet {
         #[pallet::constant]
         type MinLiquidity: Get<BalanceOf<Self>>;
         
+
+        
         /// The maximum slippage tolerance (in basis points).
         #[pallet::constant]
         type MaxSlippageBps: Get<u32>;
@@ -284,6 +286,9 @@ pub mod pallet {
             let pool_id = NextPoolId::<T>::get();
             NextPoolId::<T>::put(pool_id + 1);
 
+            // TODO: Collect protocol fee for pool creation
+            // let total_liquidity_value = initial_liquidity_a.checked_add(&initial_liquidity_b)?;
+
             // Calculate initial LP tokens (geometric mean)
             let initial_lp_tokens = initial_liquidity_a.checked_mul(&initial_liquidity_b)
                 .ok_or(Error::<T>::Overflow)?
@@ -438,6 +443,10 @@ pub mod pallet {
 
             // Check slippage
             ensure!(amount_out >= min_amount_out, Error::<T>::SlippageExceeded);
+
+            // TODO: Collect protocol fee for DEX trading
+            // let protocol_fee = T::FeeEngine::get_fee(&pallet_fee_engine::TX_TYPE_DEX_TRADING);
+            // T::FeeEngine::collect_fee(&trader, pallet_fee_engine::TX_TYPE_DEX_TRADING, protocol_fee);
 
             // Update pool reserves
             let new_reserve_in = reserve_in.checked_add(&amount_in)

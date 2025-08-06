@@ -296,6 +296,7 @@ impl pallet_dex::Config for Runtime {
 	type LpFeeBps = ConstU32<25>; // 0.25%
 	type MinLiquidity = ConstU128<1_000_000_000_000_000_000_000>; // 1 token
 	type MaxSlippageBps = ConstU32<500>; // 5%
+	type FeeEngine = FeeEngine;
 }
 
 impl pallet_dao::Config for Runtime {

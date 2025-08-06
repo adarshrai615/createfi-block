@@ -21,7 +21,9 @@ export default function WalletConnect() {
     
     initializeConnection()
     
-    return unsubscribe
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   useEffect(() => {

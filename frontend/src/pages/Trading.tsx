@@ -19,7 +19,6 @@ export default function Trading() {
     bids: [{ price: 10.50, amount: 1000 }, { price: 10.45, amount: 500 }],
     asks: [{ price: 10.55, amount: 800 }, { price: 10.60, amount: 1200 }]
   })
-  const [pools, setPools] = useState<any[]>([])
   const [selectedPool, setSelectedPool] = useState<any>(null)
   const [swapAmount, setSwapAmount] = useState('')
   const [tokenIn, setTokenIn] = useState('CREATE')
@@ -40,7 +39,9 @@ export default function Trading() {
     // Load pools when connected
     loadPools()
 
-    return unsubscribe
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
@@ -116,7 +117,7 @@ export default function Trading() {
     try {
       if (blockchainService.getState().isConnected) {
         const poolData = await blockchainService.getPools()
-        setPools(poolData)
+        // TODO: Implement pool management
         if (poolData.length > 0) {
           setSelectedPool(poolData[0])
         }

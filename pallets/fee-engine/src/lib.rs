@@ -24,11 +24,11 @@ pub use weights::*;
 pub mod pallet {
     use super::*;
     use frame_support::{
-        pallet_prelude::*,
-        traits::{Currency, Hooks},
-    };
-    use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{CheckedAdd, CheckedSub, Zero};
+    pallet_prelude::*,
+    traits::{Currency, Hooks},
+};
+use frame_system::pallet_prelude::*;
+use sp_runtime::traits::{CheckedAdd, CheckedSub, Zero, UniqueSaturatedFrom};
 
     /// The pallet's configuration trait.
     #[pallet::config]
@@ -80,8 +80,11 @@ pub mod pallet {
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-        fn on_genesis() {
-            Self::initialize_fees();
+        fn on_initialize(_block_number: BlockNumberFor<T>) -> Weight {
+            if FixedFees::<T>::iter().next().is_none() {
+                Self::initialize_fees();
+            }
+            Weight::zero()
         }
     }
 
@@ -294,37 +297,35 @@ pub mod pallet {
         /// Initialize the default fee structure.
         /// This should be called during genesis.
         pub fn initialize_fees() {
-            use sp_runtime::traits::UniqueSaturatedInto;
-            
             // Convert FI token amounts to BalanceOf<T> (assuming 12 decimal places)
             let fi_unit: u128 = 1_000_000_000_000; // 1 FI = 10^12 smallest units
             
             // Gas Fee: 0.01 FI
-            FixedFees::<T>::insert(TX_TYPE_GAS_FEE, (fi_unit / 100).unique_saturated_into());
+            FixedFees::<T>::insert(TX_TYPE_GAS_FEE, BalanceOf::<T>::unique_saturated_from(fi_unit / 100));
             
             // Bridge fees
-            FixedFees::<T>::insert(TX_TYPE_BRIDGE_SMALL, (fi_unit / 20).unique_saturated_into());      // 0.05 FI
-            FixedFees::<T>::insert(TX_TYPE_BRIDGE_MEDIUM, (fi_unit / 10).unique_saturated_into());     // 0.1 FI
-            FixedFees::<T>::insert(TX_TYPE_BRIDGE_LARGE, (fi_unit / 2).unique_saturated_into());       // 0.5 FI
-            FixedFees::<T>::insert(TX_TYPE_NFT_BRIDGE, (fi_unit / 20).unique_saturated_into());        // 0.05 FI
+            FixedFees::<T>::insert(TX_TYPE_BRIDGE_SMALL, BalanceOf::<T>::unique_saturated_from(fi_unit / 20));      // 0.05 FI
+            FixedFees::<T>::insert(TX_TYPE_BRIDGE_MEDIUM, BalanceOf::<T>::unique_saturated_from(fi_unit / 10));     // 0.1 FI
+            FixedFees::<T>::insert(TX_TYPE_BRIDGE_LARGE, BalanceOf::<T>::unique_saturated_from(fi_unit / 2));       // 0.5 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_BRIDGE, BalanceOf::<T>::unique_saturated_from(fi_unit / 20));        // 0.05 FI
             
             // DEX fees
-            FixedFees::<T>::insert(TX_TYPE_DEX_TRADING, (fi_unit / 100).unique_saturated_into());      // 0.01 FI
-            FixedFees::<T>::insert(TX_TYPE_POOL_SMALL, fi_unit.unique_saturated_into());               // 1.0 FI
-            FixedFees::<T>::insert(TX_TYPE_POOL_MEDIUM, (fi_unit * 2).unique_saturated_into());        // 2.0 FI
-            FixedFees::<T>::insert(TX_TYPE_POOL_LARGE, (fi_unit * 5).unique_saturated_into());         // 5.0 FI
-            FixedFees::<T>::insert(TX_TYPE_POOL_OPERATIONS, (fi_unit / 100).unique_saturated_into());  // 0.01 FI
+            FixedFees::<T>::insert(TX_TYPE_DEX_TRADING, BalanceOf::<T>::unique_saturated_from(fi_unit / 100));      // 0.01 FI
+            FixedFees::<T>::insert(TX_TYPE_POOL_SMALL, BalanceOf::<T>::unique_saturated_from(fi_unit));             // 1.0 FI
+            FixedFees::<T>::insert(TX_TYPE_POOL_MEDIUM, BalanceOf::<T>::unique_saturated_from(fi_unit * 2));        // 2.0 FI
+            FixedFees::<T>::insert(TX_TYPE_POOL_LARGE, BalanceOf::<T>::unique_saturated_from(fi_unit * 5));         // 5.0 FI
+            FixedFees::<T>::insert(TX_TYPE_POOL_OPERATIONS, BalanceOf::<T>::unique_saturated_from(fi_unit / 100));  // 0.01 FI
             
             // Token and NFT fees
-            FixedFees::<T>::insert(TX_TYPE_TOKEN_CREATION, (fi_unit / 2).unique_saturated_into());     // 0.5 FI
-            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_SMALL, (fi_unit / 20).unique_saturated_into()); // 0.05 FI
-            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_MEDIUM, (fi_unit / 5).unique_saturated_into()); // 0.2 FI
-            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_LARGE, fi_unit.unique_saturated_into());        // 1.0 FI
-            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_XLARGE, (fi_unit * 2).unique_saturated_into()); // 2.0 FI
+            FixedFees::<T>::insert(TX_TYPE_TOKEN_CREATION, BalanceOf::<T>::unique_saturated_from(fi_unit / 2));     // 0.5 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_SMALL, BalanceOf::<T>::unique_saturated_from(fi_unit / 20)); // 0.05 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_MEDIUM, BalanceOf::<T>::unique_saturated_from(fi_unit / 5)); // 0.2 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_LARGE, BalanceOf::<T>::unique_saturated_from(fi_unit));      // 1.0 FI
+            FixedFees::<T>::insert(TX_TYPE_NFT_MINTING_XLARGE, BalanceOf::<T>::unique_saturated_from(fi_unit * 2)); // 2.0 FI
             
             // Other fees
-            FixedFees::<T>::insert(TX_TYPE_VAULT_CREATION, (fi_unit / 20).unique_saturated_into());    // 0.05 FI
-            FixedFees::<T>::insert(TX_TYPE_GOVERNANCE_PROPOSAL, (fi_unit / 2).unique_saturated_into()); // 0.5 FI
+            FixedFees::<T>::insert(TX_TYPE_VAULT_CREATION, BalanceOf::<T>::unique_saturated_from(fi_unit / 20));    // 0.05 FI
+            FixedFees::<T>::insert(TX_TYPE_GOVERNANCE_PROPOSAL, BalanceOf::<T>::unique_saturated_from(fi_unit / 2)); // 0.5 FI
         }
     }
 

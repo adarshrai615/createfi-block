@@ -66,7 +66,7 @@ class CreatefiBlockchainService {
     const tx = this.api.tx.dex.createPool(tokenA, tokenB, liquidityA, liquidityB);
 
     return new Promise((resolve, reject) => {
-      tx.signAndSend(this.selectedAccount!.address, { signer: injector.signer }, ({ status, events }) => {
+      tx.signAndSend(this.selectedAccount!.address, { signer: injector.signer }, ({ status }) => {
         if (status.isInBlock) {
           console.log('✅ Pool created in block:', status.asInBlock.toString());
           resolve(status.asInBlock.toString());
@@ -180,7 +180,7 @@ class CreatefiBlockchainService {
   async getBalance(address: string) {
     if (!this.api) throw new Error('Not connected');
     const account = await this.api.query.system.account(address);
-    return account.data.free.toString();
+    return (account as any).data.free.toString();
   }
 
   async getPools() {
@@ -188,7 +188,7 @@ class CreatefiBlockchainService {
     const pools = await this.api.query.dex.pools.entries();
     return pools.map(([key, value]) => ({
       id: key.args[0].toString(),
-      ...value.toJSON()
+      ...(value.toJSON() as any)
     }));
   }
 
@@ -199,7 +199,7 @@ class CreatefiBlockchainService {
       .filter(([key]) => key.args[1].toString() === address)
       .map(([key, value]) => ({
         id: key.args[0].toString(),
-        ...value.toJSON()
+        ...(value.toJSON() as any)
       }));
   }
 
@@ -208,7 +208,7 @@ class CreatefiBlockchainService {
     const proposals = await this.api.query.dao.proposals.entries();
     return proposals.map(([key, value]) => ({
       id: key.args[0].toString(),
-      ...value.toJSON()
+      ...(value.toJSON() as any)
     }));
   }
 
@@ -216,8 +216,8 @@ class CreatefiBlockchainService {
   subscribeToEvents(callback: (event: any) => void) {
     if (!this.api) throw new Error('Not connected');
     
-    return this.api.query.system.events((events) => {
-      events.forEach((record) => {
+    return this.api.query.system.events((events: any) => {
+      events.forEach((record: any) => {
         const { event } = record;
         if (event.section === 'dex' || event.section === 'fiStablecoin' || 
             event.section === 'createToken' || event.section === 'dao' || 

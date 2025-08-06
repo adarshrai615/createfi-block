@@ -35,7 +35,9 @@ export default function Vaults() {
     })
 
     loadVaults()
-    return unsubscribe
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   useEffect(() => {

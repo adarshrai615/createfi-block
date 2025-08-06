@@ -19,7 +19,7 @@ interface Vault {
 }
 
 export default function Vaults() {
-  const [vaults, setVaults] = useState<Vault[]>([
+  const [vaults] = useState<Vault[]>([
     {
       id: '1',
       collateralType: 'CREATE',

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { createChart, IChartApi, ISeriesApi, LineData } from 'lightweight-charts'
+import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts'
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline'
 
 interface Trade {
@@ -13,7 +13,7 @@ interface Trade {
 export default function Trading() {
   const [selectedPair, setSelectedPair] = useState('CREATE/FI')
   const [trades, setTrades] = useState<Trade[]>([])
-  const [orderBook, setOrderBook] = useState({
+  const [orderBook] = useState({
     bids: [{ price: 10.50, amount: 1000 }, { price: 10.45, amount: 500 }],
     asks: [{ price: 10.55, amount: 800 }, { price: 10.60, amount: 1200 }]
   })
@@ -67,20 +67,21 @@ export default function Trading() {
       candlestickSeriesRef.current = candlestickSeries
 
       // Generate sample data
-      const data: LineData[] = []
+      const data: any[] = []
       let basePrice = 10.50
       const now = new Date()
       
       for (let i = 0; i < 100; i++) {
         const time = new Date(now.getTime() - (100 - i) * 60000)
         const change = (Math.random() - 0.5) * 0.1
+        const prevPrice = basePrice
         basePrice += change
         
         data.push({
-          time: time.getTime() / 1000,
-          open: basePrice - change * 0.5,
-          high: basePrice + Math.random() * 0.05,
-          low: basePrice - Math.random() * 0.05,
+          time: (time.getTime() / 1000) as any,
+          open: prevPrice,
+          high: Math.max(prevPrice, basePrice) + Math.random() * 0.05,
+          low: Math.min(prevPrice, basePrice) - Math.random() * 0.05,
           close: basePrice,
         })
       }

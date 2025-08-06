@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react'
-import { createChart, IChartApi } from 'lightweight-charts'
+import { useState, useEffect, useRef } from 'react'
 import { 
-  TrendingUpIcon, 
-  TrendingDownIcon, 
-  CurrencyDollarIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   ChartBarIcon,
-  FireIcon
+  CurrencyDollarIcon
 } from '@heroicons/react/24/outline'
+import { createChart, ColorType } from 'lightweight-charts'
 
 interface TokenRanking {
   symbol: string
@@ -28,8 +27,9 @@ interface PoolData {
 
 export default function Analytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h')
-  const [tvlChart, setTvlChart] = useState<IChartApi | null>(null)
-  const [volumeChart, setVolumeChart] = useState<IChartApi | null>(null)
+
+  const chartRef = useRef<HTMLDivElement>(null)
+  const volumeChartRef = useRef<HTMLDivElement>(null)
 
   const tokenRankings: TokenRanking[] = [
     {
@@ -105,37 +105,29 @@ export default function Analytics() {
       value: '$5,500',
       change: '+15.2%',
       changeType: 'positive',
-      icon: FireIcon
+      icon: ArrowTrendingUpIcon
     },
     {
       name: 'Active Pools',
       value: '12',
       change: '+2',
       changeType: 'positive',
-      icon: TrendingUpIcon
+      icon: ArrowTrendingUpIcon
     }
   ]
 
   useEffect(() => {
-    // Initialize TVL chart
-    const tvlContainer = document.getElementById('tvl-chart')
-    if (tvlContainer && !tvlChart) {
-      const chart = createChart(tvlContainer, {
-        width: tvlContainer.clientWidth,
-        height: 200,
+    if (chartRef.current) {
+      const chart = createChart(chartRef.current, {
         layout: {
-          background: { color: '#1f2937' },
+          background: { type: ColorType.Solid, color: '#1f2937' },
           textColor: '#d1d5db',
         },
+        width: chartRef.current.clientWidth,
+        height: 300,
         grid: {
           vertLines: { color: '#374151' },
           horzLines: { color: '#374151' },
-        },
-        rightPriceScale: {
-          borderColor: '#374151',
-        },
-        timeScale: {
-          borderColor: '#374151',
         },
       })
 
@@ -144,75 +136,51 @@ export default function Analytics() {
         lineWidth: 2,
       })
 
-      // Generate sample TVL data
-      const data = []
-      let baseTvl = 19500000
-      const now = new Date()
-      
-      for (let i = 0; i < 30; i++) {
-        const time = new Date(now.getTime() - (30 - i) * 24 * 60 * 60 * 1000)
-        const change = (Math.random() - 0.5) * 0.1
-        baseTvl += baseTvl * change
-        
-        data.push({
-          time: time.getTime() / 1000,
-          value: baseTvl,
-        })
-      }
+      // Fix time format for chart data
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        time: (Date.now() / 1000 - (29 - i) * 24 * 60 * 60) as any,
+        value: 15000000 + Math.random() * 10000000,
+      }))
 
       lineSeries.setData(data)
-      setTvlChart(chart)
-    }
 
-    // Initialize Volume chart
-    const volumeContainer = document.getElementById('volume-chart')
-    if (volumeContainer && !volumeChart) {
-      const chart = createChart(volumeContainer, {
-        width: volumeContainer.clientWidth,
-        height: 200,
+      return () => chart.remove()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (volumeChartRef.current) {
+      const chart = createChart(volumeChartRef.current, {
         layout: {
-          background: { color: '#1f2937' },
+          background: { type: ColorType.Solid, color: '#1f2937' },
           textColor: '#d1d5db',
         },
+        width: volumeChartRef.current.clientWidth,
+        height: 300,
         grid: {
           vertLines: { color: '#374151' },
           horzLines: { color: '#374151' },
         },
-        rightPriceScale: {
-          borderColor: '#374151',
-        },
-        timeScale: {
-          borderColor: '#374151',
-        },
       })
 
       const areaSeries = chart.addAreaSeries({
-        topColor: 'rgba(59, 130, 246, 0.3)',
+        topColor: 'rgba(59, 130, 246, 0.4)',
         bottomColor: 'rgba(59, 130, 246, 0.0)',
         lineColor: '#3b82f6',
         lineWidth: 2,
       })
 
-      // Generate sample volume data
-      const data = []
-      let baseVolume = 5500000
-      const now = new Date()
-      
-      for (let i = 0; i < 30; i++) {
-        const time = new Date(now.getTime() - (30 - i) * 24 * 60 * 60 * 1000)
-        const change = (Math.random() - 0.5) * 0.2
-        baseVolume += baseVolume * change
-        
-        data.push({
-          time: time.getTime() / 1000,
-          value: baseVolume,
-        })
-      }
+      // Fix time format for chart data
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        time: (Date.now() / 1000 - (29 - i) * 24 * 60 * 60) as any,
+        value: 5000000 + Math.random() * 3000000,
+      }))
 
       areaSeries.setData(data)
-      setVolumeChart(chart)
+
+      return () => chart.remove()
     }
-  }, [tvlChart, volumeChart])
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -246,9 +214,9 @@ export default function Analytics() {
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
                 <div className="flex items-center mt-1">
                   {stat.changeType === 'positive' ? (
-                    <TrendingUpIcon className="h-4 w-4 text-success-400 mr-1" />
+                    <ArrowTrendingUpIcon className="h-4 w-4 text-success-400 mr-1" />
                   ) : (
-                    <TrendingDownIcon className="h-4 w-4 text-danger-400 mr-1" />
+                    <ArrowTrendingDownIcon className="h-4 w-4 text-danger-400 mr-1" />
                   )}
                   <span className={`text-sm ${
                     stat.changeType === 'positive' ? 'text-success-400' : 'text-danger-400'
@@ -267,12 +235,12 @@ export default function Analytics() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
           <h3 className="text-lg font-semibold text-white mb-4">Total Value Locked</h3>
-          <div id="tvl-chart" className="h-48"></div>
+                        <div ref={chartRef} className="h-48"></div>
         </div>
         
         <div className="card">
           <h3 className="text-lg font-semibold text-white mb-4">24h Volume</h3>
-          <div id="volume-chart" className="h-48"></div>
+                      <div ref={volumeChartRef} className="h-48"></div>
         </div>
       </div>
 
